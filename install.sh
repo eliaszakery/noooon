@@ -265,7 +265,7 @@ download_and_configure_scripts() {
             rm "/usr/bin/$_arq"
         fi
 
-        wget -q -P /bin "https://raw.githubusercontent.com/opiran-club/opiran-panel/main/Modules/$_arq" > /dev/null 2>&1
+        wget -q -P /bin "https://raw.githubusercontent.com/eliaszakery/noooon/main/Modules/$_arq" > /dev/null 2>&1
         chmod +x "/usr/bin/$_arq" > /dev/null 2>&1
         
         echo -e "${GREEN}$_arq downloaded and configuration necessary files completed.${NC}"
