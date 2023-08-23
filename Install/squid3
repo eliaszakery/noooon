@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Variables
+NAME="squid3"
+DESC="Squid HTTP Proxy"
+DAEMON="/usr/sbin/squid3"
+PIDFILE="/var/run/$NAME.pid"
+CONFIG="/etc/squid3/squid.conf"
+SQUID_ARGS="-YC -f $CONFIG"
+
+# Source the default configuration file
+[ -f /etc/default/squid ] && . /etc/default/squid
+
+# Source the LSB init-functions for better logging
+. /lib/lsb/init-functions
+
+# Exit if Squid daemon doesn't exist
+[ -x "$DAEMON" ] || exit 0
+
+# Set open file limit
+ulimit -n 65535
+
+# Function to start Squid
+start_squid() {
+    cache_dir=$(grepconf cache_dir)
+    run_dir="/var/run/squid3"
+    create_run_dir
+
+    if test -d "$cache_dir" -a ! -d "$cache_dir/00"; then
+        log_warning_msg "Creating $DESC cache structure"
+        $DAEMON -z -f $CONFIG
+        [ -x /sbin/restorecon ] && restorecon -R "$cache_dir"
+    fi
+
+    umask 027
+    ulimit -n 65535
+    cd "$run_dir"
+    start-stop-daemon --quiet --start --pidfile "$PIDFILE" --exec "$DAEMON" -- $SQUID_ARGS < /dev/null
+    return $?
+}
+
+# Function to stop Squid
+stop_squid() {
+    PID=$(cat "$PIDFILE" 2>/dev/null)
+    start-stop-daemon --stop --quiet --pidfile "$PIDFILE" --exec "$DAEMON"
+    sleep 2
+
+    if test -n "$PID" && kill -0 "$PID" 2>/dev/null; then
+        log_action_begin_msg " Waiting"
+        cnt=0
+
+        while kill -0 "$PID" 2>/dev/null; do
+            cnt=$((cnt + 1))
+
+            if [ "$cnt" -gt 24 ]; then
+                log_action_end_msg 1
+                return 1
+            fi
+
+            sleep 5
+            log_action_cont_msg ""
+        done
+
+        log_action_end_msg 0
+        return 0
+    else
+        return 0
+    fi
+}
+
+# Function to reload Squid configuration
+reload_squid() {
+    res=$("$DAEMON" -k parse -f "$CONFIG" 2>&1 | grep -o "FATAL: .*")
+
+    if test -n "$res"; then
+        log_failure_msg "$res"
+        exit 3
+    else
+        log_action_msg "Reloading $DESC configuration files"
+        start-stop-daemon --stop --signal 1 --pidfile "$PIDFILE" --quiet --exec "$DAEMON"
+        log_action_end_msg 0
+    fi
+}
+
+# Function to restart Squid
+restart_squid() {
+    res=$("$DAEMON" -k parse -f "$CONFIG" 2>&1 | grep -o "FATAL: .*")
+
+    if test -n "$res"; then
+        log_failure_msg "$res"
+        exit 3
+    else
+        log_daemon_msg "Restarting $DESC" "$NAME"
+        stop_squid
+        if start_squid; then
+            log_end_msg $?
+        else
+            log_end_msg $?
+        fi
+    fi
+}
+
+# Function to check the status of Squid
+status_squid() {
+    status_of_proc -p "$PIDFILE" "$DAEMON" "$NAME" && exit 0 || exit 3
+}
+
+# Main script
+case "$1" in
+    start)
+        start_squid
+        ;;
+    stop)
+        stop_squid
+        ;;
+    reload|force-reload)
+        reload_squid
+        ;;
+    restart)
+        restart_squid
+        ;;
+    status)
+        status_squid
+        ;;
+    *)
+        echo "Usage: /etc/init.d/$NAME {start|stop|reload|force-reload|restart|status}"
+        exit 3
+        ;;
+esac
+
+exit 0
