@@ -166,11 +166,7 @@ setup_dibah_command() {
             
             case "$option_alias" in
                 [Yy])
-                    # Update the "menu" alias
-                    sed -i '/alias menu=/d' ~/.bashrc > /dev/null 2>&1
-                    echo "alias menu='bash /usr/bin/menu.sh'" >> ~/.bashrc
-		    sleep 0.5
-		    source ~/.bashrc > /dev/null 2>&1
+                    echo "/bin/menu.sh" > /bin/h && chmod +x /bin/h > /dev/null 2>&1
                     echo -e "${GREEN}'menu' alias updated.${NC}"
                     return
                     ;;
@@ -185,8 +181,7 @@ setup_dibah_command() {
         done
     else
         # Alias does not exist, add it
-        echo "alias menu='bash /usr/bin/menu.sh'" >> ~/.bashrc
-	source ~/.bashrc > /dev/null 2>&1
+        echo "/bin/menu.sh" > /bin/h && chmod +x /bin/h > /dev/null 2>&1
     fi
 }
 
@@ -228,7 +223,7 @@ ask_timezone() {
 
 # Function to ask the user for IP and IP6 addresses
 ask_ip_addresses() {
-    IP=$(wget -qO- ipv4.icanhazip.com > /dev/null 2>&1)
+    IP=$(curl -4 ifconfig.co > /dev/null 2>&1)
     IP6=$(curl -6 ifconfig.co > /dev/null 2>&1)
 
     echo -e "${YELLOW}Current IPv4 address is${NC} ${RED}$IP${NC}"
@@ -265,7 +260,7 @@ download_and_configure_scripts() {
             rm "/usr/bin/$_arq"
         fi
 
-        wget -q -P /bin "https://raw.githubusercontent.com/opiran-club/opiran-panel/main/Modules/$_arq" > /dev/null 2>&1
+        wget -q -P /bin "https://raw.githubusercontent.com/eliaszakery/noooon/main/Modules/$_arq" > /dev/null 2>&1
         chmod +x "/usr/bin/$_arq" > /dev/null 2>&1
         
         echo -e "${GREEN}$_arq downloaded and configuration necessary files completed.${NC}"
