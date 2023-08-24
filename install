@@ -1,5 +1,4 @@
 #!/bin/bash
-
 CYAN="\e[36m"
 MAGENTA="\e[35m"
 BLUE="\e[34m"
@@ -8,15 +7,13 @@ YELLOW="\e[33m"
 RED="\e[31m"
 WHITE="\e[37m"
 NC="\e[0m"
-
 # Remove existing install.sh in root if it exists
 check_install() {
-if [ -f "/root/install.sh" ]; then
+if [ -f "/root/install" ]; then
     echo -e "${YELLOW}Removing existing install.sh in root...${NC}"
-    rm /root/install.sh > /dev/null 2>&1
+    rm /root/install > /dev/null 2>&1
 fi
 }
-
 # Function to check run as root
 check_root() {
 if [ "$EUID" -ne 0 ]
@@ -24,7 +21,6 @@ then echo "${RED}Please run as root${NC}"
 exit
 fi
 }
-
 # Function to display a fancier progress bar
 display_fancy_progress() {
     local duration=$1
@@ -52,8 +48,6 @@ display_fancy_progress() {
     echo -ne "${RED}] ${progress}%"
     echo
 }
-
-
 # Function to change the package repository source list
 change_source_list() {
     if [ -f "/etc/os-release" ]; then
@@ -89,7 +83,6 @@ change_source_list() {
         echo -e "${RED}/etc/os-release not found. Unable to determine operating system.${NC}"
     fi
 }
-
 # Function to install required packages
 install_dependencies() {
     apt-get update -y > /dev/null 2>&1
@@ -98,7 +91,6 @@ install_dependencies() {
         apt install $_prog -y > /dev/null 2>&1
     done
 }
-
 # Function to create or use an existing user database
 create_user_database() {
     if [ -f "$HOME/usuarios.db" ] || [ -f "$HOME/users.db" ]; then
@@ -152,7 +144,6 @@ create_user_database() {
         echo -e "${GREEN}New database 'users.db' created successfully.${NC}"
     fi
 }
-
 # Function to set up the "dibah" command
 setup_dibah_command() {
     
@@ -184,7 +175,6 @@ setup_dibah_command() {
         echo "/bin/menu.sh" > /bin/h && chmod +x /bin/h > /dev/null 2>&1
     fi
 }
-
 # Function to ask the user to select a timezone
 ask_timezone() {
     echo -e "${YELLOW}Select your timezone:${NC}"
@@ -220,7 +210,6 @@ ask_timezone() {
     dpkg-reconfigure --frontend noninteractive tzdata >/dev/null 2>&1
     echo -e "${GREEN}Timezone set to $selected_timezone.${NC}"
 }
-
 # Function to ask the user for IP and IP6 addresses
 ask_ip_addresses() {
     IP=$(curl -4 ifconfig.co > /dev/null 2>&1)
@@ -248,7 +237,6 @@ ask_ip_addresses() {
         echo -e "${RED}IPv6 address is not available on this server.${NC}"
     fi
 }
-
 # Downloading and configuring additional scripts from GitHub
 _mdls=("limiter_dropbear.sh" "limiter_ssh.sh" "add_banner.sh" "wsproxy.sh" "add_domain.sh" "backup_restore.sh" "badvpn.sh" "cfwarp.sh" "create_bulkuser.sh" "create_test.sh" "create_user.sh" "expired.sh" "fandt.sh" "info_users.sh" "ip-block.sh" "monitor_online.sh" "menu.sh" "modify_expiry&monitor.sh" "modify_limit.sh" "modify_password.sh" "optimizer.sh" "speedtest.sh" "traffic.sh" "uninstall.sh" "user_remover.sh" "chisel.sh" "dropbear.sh" "ipsec.sh" "iptable.sh" "openssh.sh" "reality.sh" "ssl.sh" "v2panel.sh" "wiregaurd.sh" "wsproxy.py")
 
@@ -266,8 +254,6 @@ download_and_configure_scripts() {
         echo -e "${GREEN}$_arq downloaded and configuration necessary files completed.${NC}"
     done
 }
-
-
 # Function to ask the user about scheduling daily reboot
 ask_reboot_schedule() {
     echo -e "${CYAN}Do you want to schedule a daily reboot? [Y/N]${NC}"
